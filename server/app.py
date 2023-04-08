@@ -28,8 +28,23 @@ api.add_resource(Index, '/')
 
 class Scientists(Resource):
     def get(self):
-        smart_kid = [s.to_dict() for s in Scientist.query.all()]
-        return make_response(jsonify(smart_kid), 200)
+        smartie = Scientist.query.all()
+        smart_kid_list = []
+        for s in smartie:
+            s_dict = {
+                'id':s.id,
+                "name":s.name,
+                "field_of_study": s.field_of_study,
+                "avatar": s.avatar,
+            }
+            smart_kid_list.append(s_dict)
+
+        # return make_response({'scientists':smart_kid_list}, 200)
+        return make_response(jsonify(smart_kid_list), 200)
+    
+    # The below code returns all the information...including the nested data ####
+        # smart_kid = [s.to_dict() for s in Scientist.query.all()]
+        # return make_response(jsonify(smart_kid), 200)
 
     def post(self):
         data = request.get_json()
@@ -48,8 +63,33 @@ api.add_resource(Scientists, '/scientists')
 
 class ScientistsById(Resource):
     def get(self, id):
-        smart_kid = Scientist.query.filter_by(id = id).first().to_dict()
-        return make_response(jsonify(smart_kid), 200)
+            smartie = Scientist.query.get(id)
+            if smartie:
+                field_trip = Mission.query.filter_by(id = id).all()
+                planets = []
+                for trip in field_trip:
+                    planet = Planet.query.get(trip.planet_id)
+                    planets.append({
+                        'id': planet.id,
+                        'name': planet.name,
+                        'distance_from_earth': planet.distance_from_earth,
+                        'nearest_star': planet.nearest_star,
+                        'image': planet.image
+                    })
+                smartie_data = {
+                    'id': smartie.id,
+                    'name': smartie.name,
+                    'field_of_study': smartie.field_of_study,
+                    'avatar': smartie.avatar,
+                    'planets': planets
+                }
+                return make_response(jsonify(smartie_data), 200)
+            else:
+                return make_response(jsonify({'message': 'Scientist not found'}), 404)
+
+    ##### Returns Everything#### 
+    # smart_kid = Scientist.query.filter_by(id = id).first().to_dict()
+    # return make_response(jsonify(smart_kid), 200)
     
     def patch(self,id):
         data = request.get_json()
