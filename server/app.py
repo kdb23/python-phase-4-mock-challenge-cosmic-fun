@@ -101,7 +101,16 @@ class ScientistsById(Resource):
         db.session.commit()
 
         new_info_dict = new_info.to_dict()
-        response = make_response(new_info_dict, 200)
+        response = make_response(new_info_dict, 202)
+        return response
+    
+    def delete(self, id):
+        doomed = Scientist.query.filter_by(id = id).first()
+        db.session.delete(doomed)
+        db.session.commit()
+
+        doomed_dict = {"message": " "}
+        response = make_response(doomed_dict, 204)
         return response
 
 api.add_resource(ScientistsById, '/scientists/<int:id>')
