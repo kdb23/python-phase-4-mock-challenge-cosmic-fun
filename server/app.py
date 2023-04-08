@@ -115,5 +115,22 @@ class ScientistsById(Resource):
 
 api.add_resource(ScientistsById, '/scientists/<int:id>')
 
+class Planets(Resource):
+    def get(self):
+        world = Planet.query.all()
+        world_list = []
+        for w in world:
+            w_dict = {
+                "id": w. id,
+                "name": w.name,
+                "distance_from_earth": w.distance_from_earth,
+                "nearest_star": w.nearest_star,
+                "image": w.image,
+            }
+            world_list.append(w_dict)
+        return make_response(jsonify(world_list), 200)
+
+api.add_resource(Planets, '/planets')
+
 if __name__ == '__main__':
     app.run(port=5555)
