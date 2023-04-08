@@ -132,5 +132,25 @@ class Planets(Resource):
 
 api.add_resource(Planets, '/planets')
 
+class Missions(Resource):
+    def get(self):
+        new_mission = [m.to_dict() for m in Mission.query.all()]
+        return make_response(jsonify(new_mission), 200)
+        
+    def post(self):
+        data = request.get_json()
+        new_mission = Mission(
+            name = data['name'],
+            scientist_id = data['scientist_id'],
+            planet_id = data['planet_id'],
+        )
+        db.session.add(new_mission)
+        db.session.commit()
+
+        return make_response(new_mission.to_dict(), 201)
+
+     
+api.add_resource(Missions, '/missions')
+
 if __name__ == '__main__':
     app.run(port=5555)
