@@ -56,6 +56,7 @@ class Scientists(Resource):
         db.session.add(new_kid)
         db.session.commit()
 
+
         return make_response(new_kid.to_dict(), 201)
 
 
@@ -109,8 +110,8 @@ class ScientistsById(Resource):
         db.session.delete(doomed)
         db.session.commit()
 
-        doomed_dict = {"message": " "}
-        response = make_response(doomed_dict, 204)
+        doomed_dict = {"message": "Scientist Not Found"}
+        response = make_response(doomed_dict, 404)
         return response
 
 api.add_resource(ScientistsById, '/scientists/<int:id>')
