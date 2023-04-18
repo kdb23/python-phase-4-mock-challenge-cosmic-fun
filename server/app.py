@@ -26,85 +26,80 @@ class Index(Resource):
 
 api.add_resource(Index, '/')
 
+
 class Scientists(Resource):
+
     def get(self):
-        smartie = Scientist.query.all()
-        smart_kid_list = []
-        for s in smartie:
-            s_dict = {
-                'id':s.id,
-                "name":s.name,
-                "field_of_study": s.field_of_study,
-                "avatar": s.avatar,
-            }
-            smart_kid_list.append(s_dict)
-
-        # return make_response({'scientists':smart_kid_list}, 200)
-        return make_response(jsonify(smart_kid_list), 200)
+        smart_kid = [s.to_dict() for s in Scientist.query.all()]
+        return make_response(smart_kid, 200)
     
-    # The below code returns all the information...including the nested data ####
-        # smart_kid = [s.to_dict() for s in Scientist.query.all()]
-        # return make_response(jsonify(smart_kid), 200)
-
     def post(self):
         data = request.get_json()
-        new_kid = Scientist(
-            name = data['name'],
-            field_of_study = data['field_of_study'],
-            avatar = data['avatar'],
-        )
+        try:
+            new_kid = Scientist(
+                name = data['name'],
+                field_of_study = data['field_of_study'],
+                avatar = data['avatar']
+            )
+        except:
+            return make_response({'error': 'Scientist Not Found'}, 404)
         db.session.add(new_kid)
         db.session.commit()
-
         return make_response(new_kid.to_dict(), 201)
-
-
+    
 api.add_resource(Scientists, '/scientists')
 
-class ScientistsById(Resource):
+class ScientistById(Resource):
+
     def get(self, id):
-            smartie = Scientist.query.get(id)
-            if smartie:
-                field_trip = Mission.query.filter_by(id = id).all()
-                planets = []
-                for trip in field_trip:
-                    planet = Planet.query.get(trip.planet_id)
-                    planets.append({
-                        'id': planet.id,
-                        'name': planet.name,
-                        'distance_from_earth': planet.distance_from_earth,
-                        'nearest_star': planet.nearest_star,
-                        'image': planet.image
-                    })
-                smartie_data = {
-                    'id': smartie.id,
-                    'name': smartie.name,
-                    'field_of_study': smartie.field_of_study,
-                    'avatar': smartie.avatar,
-                    'planets': planets
-                }
-                return make_response(jsonify(smartie_data), 200)
-            else:
-                return make_response(jsonify({'message': 'Scientist not found'}), 404)
-
-    ##### Returns Everything#### 
-    # smart_kid = Scientist.query.filter_by(id = id).first().to_dict()
-    # return make_response(jsonify(smart_kid), 200)
+        smart_kid = Scientist.query.filter_by(id = id).first()
+        if not smart_kid:
+            return make_response({'error': 'scinetist not found'}, 404)
+        smart_dict = smart_kid.to_dict(rules=('planets',))
+        return make_response(smart_dict, 200)
     
-    def patch(self,id):
+    def patch(self, id):
         data = request.get_json()
-        new_info = Scientist.query.filter_by(id = id).first()
+        smart_kid = Scientist.query.filter_by(id = id).first()
         for info in data:
-            setattr(new_info, info, data[info])
-
-        db.session.add(new_info)
+            setattr(smart_kid, info, data[info])
+        db.session.add(smart_kid)
         db.session.commit()
+        return make_response(smart_kid.to_dict(), 202)
 
-        new_info_dict = new_info.to_dict()
-        response = make_response(new_info_dict, 200)
-        return response
 
-api.add_resource(ScientistsById, '/scientists/<int:id>')
 
+api.add_resource(ScientistById, '/scientists/<int:id>')
+
+class Planets(Resource):
+
+    def get(self):
+        planet = [s.to_dict() for s in Planet.query.all()]
+        return make_response(planet, 200)
+    
+api.add_resource(Planets, '/planets')
+
+
+class Missions(Resource):
+
+    def get(self):
+        mission = [m.to_dict() for m in Mission.query.all()]
+        return make_response(mission, 200)
+    
+    def post(self):
+        data = request.get_json()
+        try:
+            new_mission = Mission(
+                name = data['name'],
+                scientist_id = data['scientist_id'],
+                planet_id = data['planet_id']
+            )
+        except:
+            return make_response({'error': 'Scientist Not Found'}, 404)
+        db.session.add(new_mission)
+        db.session.commit()
+        return make_response(new_mission.planet.to_dict(), 201)
+    
+api.add_resource(Missions, '/missions')
 if __name__ == '__main__':
     app.run(port=5555)
